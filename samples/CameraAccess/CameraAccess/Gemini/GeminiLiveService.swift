@@ -200,9 +200,9 @@ class GeminiLiveService: ObservableObject {
     case .golf:    systemInstruction = GeminiConfig.golfModeSystemInstruction
     }
 
-    // Meeting mode: TEXT only (silent note-taking, no voice output)
-    // Normal + Golf: AUDIO responses
-    let modalities: [String] = sessionMode == .meeting ? ["TEXT"] : ["AUDIO"]
+    // All modes use AUDIO modality (native audio model requires it).
+    // Meeting mode suppresses playback — notes come via outputTranscription.
+    let modalities: [String] = ["AUDIO"]
 
     var setupContent: [String: Any] = [
       "model": GeminiConfig.model,

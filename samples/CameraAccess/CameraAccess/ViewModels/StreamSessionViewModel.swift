@@ -254,6 +254,8 @@ class StreamSessionViewModel: ObservableObject {
   func stopAudioOnlySession() {
     streamingStatus = .stopped
     streamingMode = .glasses
+    currentVideoFrame = nil
+    hasReceivedFirstFrame = false
     NSLog("[Stream] Audio-only mode stopped")
   }
 

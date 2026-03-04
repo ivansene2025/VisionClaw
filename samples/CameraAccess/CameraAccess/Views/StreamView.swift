@@ -25,37 +25,42 @@ struct StreamView: View {
 
   private var audioOnlyIcon: String {
     switch geminiVM.sessionMode {
-    case .meeting: return "note.text"
-    case .golf:    return "flag.fill"
-    case .normal:  return "headphones.circle.fill"
+    case .meeting:         return "note.text"
+    case .golf:            return "flag.fill"
+    case .liveTranslation: return "globe"
+    case .normal:          return "headphones.circle.fill"
     }
   }
   private var audioOnlyIconColor: Color {
     switch geminiVM.sessionMode {
-    case .meeting: return .orange.opacity(0.8)
-    case .golf:    return .green.opacity(0.8)
-    case .normal:  return .white.opacity(0.6)
+    case .meeting:         return .orange.opacity(0.8)
+    case .golf:            return .green.opacity(0.8)
+    case .liveTranslation: return .blue.opacity(0.8)
+    case .normal:          return .white.opacity(0.6)
     }
   }
   private var audioOnlyTitle: String {
     switch geminiVM.sessionMode {
-    case .meeting: return "Meeting Mode"
-    case .golf:    return "Golf Mode"
-    case .normal:  return "Audio Only"
+    case .meeting:         return "Meeting Mode"
+    case .golf:            return "Golf Mode"
+    case .liveTranslation: return "Translation Mode"
+    case .normal:          return "Audio Only"
     }
   }
   private var audioOnlyTitleColor: Color {
     switch geminiVM.sessionMode {
-    case .meeting: return .orange
-    case .golf:    return .green
-    case .normal:  return .white
+    case .meeting:         return .orange
+    case .golf:            return .green
+    case .liveTranslation: return .blue
+    case .normal:          return .white
     }
   }
   private var audioOnlySubtitle: String {
     switch geminiVM.sessionMode {
-    case .meeting: return "Taking notes — AI will not respond to commands"
-    case .golf:    return "Golf caddie active — tracking your round"
-    case .normal:  return "No camera active — no LED"
+    case .meeting:         return "Taking notes — AI will not respond to commands"
+    case .golf:            return "No glasses — voice-only caddie mode"
+    case .liveTranslation: return "Translating to \(SettingsManager.shared.translationTargetLanguage)"
+    case .normal:          return "No camera active — no LED"
     }
   }
 
@@ -83,18 +88,21 @@ struct StreamView: View {
         .edgesIgnoringSafeArea(.all)
       } else if viewModel.streamingMode == .iPhone && viewModel.currentVideoFrame == nil && !viewModel.hasReceivedFirstFrame && viewModel.streamingStatus == .streaming {
         // Audio-only mode: no camera feed
-        VStack(spacing: 16) {
-          Image(systemName: audioOnlyIcon)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 80, height: 80)
-            .foregroundColor(audioOnlyIconColor)
-          Text(audioOnlyTitle)
-            .font(.system(size: 24, weight: .semibold))
-            .foregroundColor(audioOnlyTitleColor)
-          Text(audioOnlySubtitle)
-            .font(.system(size: 14))
-            .foregroundColor(.white.opacity(0.5))
+        // Hide labels when a mode overlay is active (it has its own indicator)
+        if !geminiVM.isGeminiActive || geminiVM.sessionMode == .normal {
+          VStack(spacing: 16) {
+            Image(systemName: audioOnlyIcon)
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(width: 80, height: 80)
+              .foregroundColor(audioOnlyIconColor)
+            Text(audioOnlyTitle)
+              .font(.system(size: 24, weight: .semibold))
+              .foregroundColor(audioOnlyTitleColor)
+            Text(audioOnlySubtitle)
+              .font(.system(size: 14))
+              .foregroundColor(.white.opacity(0.5))
+          }
         }
       } else {
         ProgressView()
@@ -110,6 +118,9 @@ struct StreamView: View {
         } else if geminiVM.sessionMode == .golf {
           // Golf mode: green overlay with scorecard HUD
           GolfOverlay(geminiVM: geminiVM)
+        } else if geminiVM.sessionMode == .liveTranslation {
+          // Translation mode: subtitle overlay
+          TranslationOverlay(geminiVM: geminiVM)
         } else {
           // Normal AI mode: status bar + transcript + speaking indicator
           VStack {
@@ -156,12 +167,53 @@ struct StreamView: View {
         .padding(.all, 24)
       }
 
+      // Status pills (top-right, behind overlays)
+      if !geminiVM.isGeminiActive {
+        VStack {
+          HStack {
+            Spacer()
+            VStack(alignment: .trailing, spacing: 4) {
+              // Device connection pill (glasses mode)
+              if viewModel.streamingMode == .glasses, let deviceName = wearablesVM.activeDeviceName {
+                DeviceStatusPill(
+                  deviceName: deviceName,
+                  linkState: wearablesVM.activeDeviceLinkState
+                )
+              }
+              // OpenClaw status pill (always visible when configured)
+              OpenClawStatusPill(state: geminiVM.openClawConnectionState)
+            }
+          }
+          Spacer()
+        }
+        .padding(.top, 12)
+        .padding(.trailing, 16)
+      } else if viewModel.streamingMode == .glasses, let deviceName = wearablesVM.activeDeviceName {
+        // During active session, only show device pill (Gemini overlay has its own OpenClaw indicator)
+        VStack {
+          HStack {
+            Spacer()
+            DeviceStatusPill(
+              deviceName: deviceName,
+              linkState: wearablesVM.activeDeviceLinkState
+            )
+          }
+          Spacer()
+        }
+        .padding(.top, 12)
+        .padding(.trailing, 16)
+      }
+
       // Bottom controls layer
       VStack {
         Spacer()
         ControlsView(viewModel: viewModel, geminiVM: geminiVM, webrtcVM: webrtcVM)
       }
       .padding(.all, 24)
+    }
+    .onAppear {
+      geminiVM.checkOpenClawOnAppear()
+      WebRTCConfig.prewarm()
     }
     .onDisappear {
       Task {
@@ -204,6 +256,13 @@ struct StreamView: View {
       Button("OK") { webrtcVM.errorMessage = nil }
     } message: {
       Text(webrtcVM.errorMessage ?? "")
+    }
+    // Discord session notes share prompt
+    .alert("Share Session Notes", isPresented: $geminiVM.showDiscordSharePrompt) {
+      Button("Share to Discord") { geminiVM.shareToDiscord() }
+      Button("Dismiss", role: .cancel) { geminiVM.dismissDiscordShare() }
+    } message: {
+      Text("Post session notes to #visionclaw on Discord?")
     }
   }
 }
@@ -264,6 +323,11 @@ struct ControlsView: View {
         .opacity(webrtcVM.isActive ? 0.4 : 1.0)
         .disabled(webrtcVM.isActive)
 
+      // Translation Mode button (disabled when WebRTC is active — audio conflict)
+      TranslationModeButton(geminiVM: geminiVM)
+        .opacity(webrtcVM.isActive ? 0.4 : 1.0)
+        .disabled(webrtcVM.isActive)
+
       // WebRTC Live Stream button (disabled when Gemini is active — audio conflict)
       CircleButton(
         icon: webrtcVM.isActive
@@ -281,6 +345,102 @@ struct ControlsView: View {
       }
       .opacity(geminiVM.isGeminiActive ? 0.4 : 1.0)
       .disabled(geminiVM.isGeminiActive)
+    }
+  }
+}
+
+// MARK: - Device Status Pill
+
+struct DeviceStatusPill: View {
+  let deviceName: String
+  let linkState: LinkState
+
+  private var statusColor: Color {
+    switch linkState {
+    case .connected:    return .green
+    case .connecting:   return .yellow
+    case .disconnected: return .red
+    @unknown default:   return .gray
+    }
+  }
+
+  private var shortName: String {
+    // "Ray-Ban | Meta Wayfarer" → "Ray-Ban"
+    if let pipe = deviceName.firstIndex(of: "|") {
+      return String(deviceName[..<pipe]).trimmingCharacters(in: .whitespaces)
+    }
+    // Truncate long names
+    if deviceName.count > 16 {
+      return String(deviceName.prefix(14)) + "..."
+    }
+    return deviceName
+  }
+
+  var body: some View {
+    HStack(spacing: 6) {
+      Circle()
+        .fill(statusColor)
+        .frame(width: 7, height: 7)
+      Image(systemName: "eyeglasses")
+        .font(.system(size: 11, weight: .medium))
+        .foregroundColor(.white.opacity(0.8))
+      Text(shortName)
+        .font(.system(size: 11, weight: .medium))
+        .foregroundColor(.white.opacity(0.8))
+        .lineLimit(1)
+    }
+    .padding(.horizontal, 10)
+    .padding(.vertical, 5)
+    .background(Color.black.opacity(0.5))
+    .cornerRadius(12)
+  }
+}
+
+struct OpenClawStatusPill: View {
+  let state: OpenClawConnectionState
+
+  private var statusColor: Color {
+    switch state {
+    case .connected:        return .green
+    case .connectedViaTunnel: return .cyan
+    case .checking:         return .yellow
+    case .unreachable:      return .red
+    case .notConfigured:    return .gray
+    }
+  }
+
+  private var statusText: String {
+    let net = NetworkMonitor.shared
+    let netLabel = net.isCellular ? "5G" : "WiFi"
+    switch state {
+    case .connected:          return "OpenClaw (\(netLabel))"
+    case .connectedViaTunnel: return "OpenClaw (Tunnel)"
+    case .checking:           return "OpenClaw..."
+    case .unreachable:        return "OpenClaw Off"
+    case .notConfigured:      return ""
+    }
+  }
+
+  var body: some View {
+    if case .notConfigured = state {
+      EmptyView()
+    } else {
+      HStack(spacing: 6) {
+        Circle()
+          .fill(statusColor)
+          .frame(width: 7, height: 7)
+        Image(systemName: "bolt.horizontal.fill")
+          .font(.system(size: 9, weight: .medium))
+          .foregroundColor(.white.opacity(0.8))
+        Text(statusText)
+          .font(.system(size: 11, weight: .medium))
+          .foregroundColor(.white.opacity(0.8))
+          .lineLimit(1)
+      }
+      .padding(.horizontal, 10)
+      .padding(.vertical, 5)
+      .background(Color.black.opacity(0.5))
+      .cornerRadius(12)
     }
   }
 }

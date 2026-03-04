@@ -2,7 +2,11 @@ import Foundation
 import WebRTC
 
 enum WebRTCConfig {
-  static let signalingServerURL = Secrets.webrtcSignalingURL
+  /// Signaling server URL. Use Settings override if set, otherwise fall back to Secrets.
+  /// The default Fly.io URL (wss://) works on both WiFi and 5G.
+  static var signalingServerURL: String {
+    return SettingsManager.shared.webrtcSignalingURL
+  }
 
   static let stunServers = [
     "stun:stun.l.google.com:19302",
@@ -15,6 +19,17 @@ enum WebRTCConfig {
   static var isConfigured: Bool {
     return !signalingServerURL.isEmpty
       && signalingServerURL != "ws://YOUR_MAC_IP:8080"
+  }
+
+  /// Pre-warm the Fly.io signaling server (wakes it from cold sleep).
+  /// Call early (e.g. on view appear) so it's ready when user taps Live.
+  static func prewarm() {
+    guard isConfigured, let url = URL(string: httpBaseURL) else { return }
+    var request = URLRequest(url: url)
+    request.timeoutInterval = 5
+    URLSession.shared.dataTask(with: request) { _, _, _ in
+      NSLog("[WebRTC] Signaling server pre-warmed")
+    }.resume()
   }
 
   /// Derive the HTTP base URL from the WebSocket signaling URL.
@@ -34,7 +49,9 @@ enum WebRTCConfig {
     }
 
     do {
-      let (data, _) = try await URLSession.shared.data(from: url)
+      var request = URLRequest(url: url)
+      request.timeoutInterval = 5
+      let (data, _) = try await URLSession.shared.data(for: request)
       if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
         // Handle iceServers array format: { iceServers: [{urls, username, credential}, ...] }
         if let iceServersArray = json["iceServers"] as? [[String: Any]] {

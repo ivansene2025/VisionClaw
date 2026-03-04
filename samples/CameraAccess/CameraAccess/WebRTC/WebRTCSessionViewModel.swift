@@ -42,12 +42,25 @@ class WebRTCSessionViewModel: ObservableObject {
     connectionState = .connecting
     savedRoomCode = nil
 
-    // Fetch TURN credentials for NAT traversal across networks
-    let iceServers = await WebRTCConfig.fetchIceServers()
-
-    setupWebRTCClient(iceServers: iceServers)
+    // Start immediately with STUN-only (no network wait)
+    setupWebRTCClient(iceServers: nil)
     connectSignaling(rejoinCode: nil)
     observeForeground()
+
+    // Fetch TURN credentials in background — if they arrive before
+    // a peer joins, recreate the peer connection with TURN for better NAT traversal
+    Task { @MainActor in
+      let iceServers = await WebRTCConfig.fetchIceServers()
+      guard self.isActive, iceServers.count > 1 else { return }
+      // Only upgrade if we haven't connected to a peer yet
+      if case .waitingForPeer = self.connectionState {
+        NSLog("[WebRTC] Upgrading peer connection with TURN servers")
+        self.setupWebRTCClient(iceServers: iceServers)
+      } else if case .connecting = self.connectionState {
+        NSLog("[WebRTC] Upgrading peer connection with TURN servers")
+        self.setupWebRTCClient(iceServers: iceServers)
+      }
+    }
   }
 
   func stopSession() {

@@ -34,6 +34,7 @@ struct GeminiStatusBar: View {
   private var openClawStatusColor: Color {
     switch geminiVM.openClawConnectionState {
     case .connected: return .green
+    case .connectedViaTunnel: return .cyan
     case .checking: return .yellow
     case .unreachable: return .red
     case .notConfigured: return .gray
@@ -41,10 +42,13 @@ struct GeminiStatusBar: View {
   }
 
   private var openClawStatusText: String {
+    let net = NetworkMonitor.shared
+    let netLabel = net.isCellular ? "5G" : "WiFi"
     switch geminiVM.openClawConnectionState {
-    case .connected: return "OpenClaw"
+    case .connected: return "OpenClaw (\(netLabel))"
+    case .connectedViaTunnel: return "OpenClaw (Tunnel/\(netLabel))"
     case .checking: return "OpenClaw..."
-    case .unreachable: return "OpenClaw Off"
+    case .unreachable: return "OpenClaw Off (\(netLabel))"
     case .notConfigured: return "No OpenClaw"
     }
   }
@@ -278,6 +282,40 @@ struct MeetingModePill: View {
         .stroke(Color.orange.opacity(0.4), lineWidth: 1)
     )
     .onAppear { pulsing = true }
+  }
+}
+
+// MARK: - Translation Mode Button (for controls bar)
+
+struct TranslationModeButton: View {
+  @ObservedObject var geminiVM: GeminiSessionViewModel
+
+  private var isTranslation: Bool { geminiVM.sessionMode == .liveTranslation }
+
+  var body: some View {
+    Button(action: {
+      Task {
+        if geminiVM.isGeminiActive && isTranslation {
+          geminiVM.stopSession()
+        } else if !geminiVM.isGeminiActive {
+          await geminiVM.startTranslationSession()
+        }
+      }
+    }) {
+      VStack(spacing: 2) {
+        Image(systemName: isTranslation ? "globe.badge.chevron.backward" : "globe")
+          .font(.system(size: 14))
+        Text("Trans")
+          .font(.system(size: 10, weight: .medium))
+      }
+    }
+    .foregroundColor(isTranslation ? .white : .black)
+    .frame(width: 56, height: 56)
+    .background(isTranslation ? Color.blue : .white)
+    .clipShape(Circle())
+    // Disable if another session mode is already active
+    .opacity(geminiVM.isGeminiActive && !isTranslation ? 0.4 : 1.0)
+    .disabled(geminiVM.isGeminiActive && !isTranslation)
   }
 }
 

@@ -9,9 +9,17 @@ struct SettingsView: View {
   @State private var openClawPort: String = ""
   @State private var openClawHookToken: String = ""
   @State private var openClawGatewayToken: String = ""
+  @State private var openClawTunnelURL: String = ""
   @State private var geminiSystemPrompt: String = ""
   @State private var webrtcSignalingURL: String = ""
+  @State private var translationTargetLanguage: String = ""
+  @State private var translationOutputMode: String = ""
+  @State private var golfCourseAPIKey: String = ""
+  @State private var discordVisionClawWebhook: String = ""
   @State private var showResetConfirmation = false
+
+  private let translationLanguages = ["English", "Portuguese", "Arabic", "Spanish", "French", "Italian", "German", "Chinese", "Japanese", "Korean", "Russian", "Hindi"]
+  private let translationOutputModes = [("both", "Both"), ("text", "Text Only"), ("audio", "Audio Only")]
 
   var body: some View {
     NavigationView {
@@ -74,6 +82,56 @@ struct SettingsView: View {
               .disableAutocorrection(true)
               .font(.system(.body, design: .monospaced))
           }
+
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Tunnel URL (off-WiFi fallback)")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            TextField("https://xxx.ngrok-free.dev", text: $openClawTunnelURL)
+              .autocapitalization(.none)
+              .disableAutocorrection(true)
+              .keyboardType(.URL)
+              .font(.system(.body, design: .monospaced))
+          }
+        }
+
+        Section(header: Text("Golf"), footer: Text("Free API key at golfcourseapi.com — enables course data, distance to green, and hole info.")) {
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Golf Course API Key")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            TextField("Enter API key", text: $golfCourseAPIKey)
+              .autocapitalization(.none)
+              .disableAutocorrection(true)
+              .font(.system(.body, design: .monospaced))
+          }
+        }
+
+        Section(header: Text("Translation"), footer: Text("Configure the live translation mode target language and output.")) {
+          Picker("Target Language", selection: $translationTargetLanguage) {
+            ForEach(translationLanguages, id: \.self) { lang in
+              Text(lang).tag(lang)
+            }
+          }
+
+          Picker("Output Mode", selection: $translationOutputMode) {
+            ForEach(translationOutputModes, id: \.0) { mode in
+              Text(mode.1).tag(mode.0)
+            }
+          }
+        }
+
+        Section(header: Text("Discord"), footer: Text("Webhook URL for #visionclaw channel. Server Settings > Integrations > Webhooks in Discord.")) {
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Webhook URL")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            TextField("https://discord.com/api/webhooks/...", text: $discordVisionClawWebhook)
+              .autocapitalization(.none)
+              .disableAutocorrection(true)
+              .keyboardType(.URL)
+              .font(.system(.body, design: .monospaced))
+          }
         }
 
         Section(header: Text("WebRTC")) {
@@ -134,7 +192,12 @@ struct SettingsView: View {
     openClawPort = String(settings.openClawPort)
     openClawHookToken = settings.openClawHookToken
     openClawGatewayToken = settings.openClawGatewayToken
+    openClawTunnelURL = settings.openClawTunnelURL
     webrtcSignalingURL = settings.webrtcSignalingURL
+    translationTargetLanguage = settings.translationTargetLanguage
+    translationOutputMode = settings.translationOutputMode
+    golfCourseAPIKey = settings.golfCourseAPIKey
+    discordVisionClawWebhook = settings.discordVisionClawWebhook
   }
 
   private func save() {
@@ -146,6 +209,11 @@ struct SettingsView: View {
     }
     settings.openClawHookToken = openClawHookToken.trimmingCharacters(in: .whitespacesAndNewlines)
     settings.openClawGatewayToken = openClawGatewayToken.trimmingCharacters(in: .whitespacesAndNewlines)
+    settings.openClawTunnelURL = openClawTunnelURL.trimmingCharacters(in: .whitespacesAndNewlines)
     settings.webrtcSignalingURL = webrtcSignalingURL.trimmingCharacters(in: .whitespacesAndNewlines)
+    settings.translationTargetLanguage = translationTargetLanguage
+    settings.translationOutputMode = translationOutputMode
+    settings.golfCourseAPIKey = golfCourseAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    settings.discordVisionClawWebhook = discordVisionClawWebhook.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

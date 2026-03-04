@@ -3,10 +3,14 @@ import Foundation
 
 class AudioManager {
   var onAudioCaptured: ((Data) -> Void)?
+  /// Called when audio session is interrupted (e.g. phone call) or resumed
+  var onInterruptionStateChanged: ((Bool) -> Void)?  // true = interrupted
 
   private let audioEngine = AVAudioEngine()
   private let playerNode = AVAudioPlayerNode()
   private var isCapturing = false
+  private var isInterrupted = false
+  private var interruptionObserver: Any?
 
   private let outputFormat: AVAudioFormat
 
@@ -14,6 +18,9 @@ class AudioManager {
   private let sendQueue = DispatchQueue(label: "audio.accumulator")
   private var accumulatedData = Data()
   private let minSendBytes = 3200  // 100ms at 16kHz mono Int16 = 1600 frames * 2 bytes
+
+  /// Whether the audio session should mix with other apps (meeting mode background)
+  private var mixWithOthers = false
 
   init() {
     self.outputFormat = AVAudioFormat(
@@ -24,24 +31,125 @@ class AudioManager {
     )!
   }
 
-  func setupAudioSession(useIPhoneMode: Bool = false) throws {
+  func setupAudioSession(useIPhoneMode: Bool = false, backgroundMix: Bool = false) throws {
     let session = AVAudioSession.sharedInstance()
-    // iPhone mode: voiceChat for aggressive echo cancellation (mic + speaker co-located)
-    // Glasses mode: videoChat for mild AEC (mic is on glasses, speaker is on phone)
-    let mode: AVAudioSession.Mode = useIPhoneMode ? .voiceChat : .videoChat
+    self.mixWithOthers = backgroundMix
+
+    // Meeting/background mode: use .default mode — no echo cancellation needed (just listening)
+    // .voiceChat/.videoChat are incompatible with .mixWithOthers on iOS
+    let mode: AVAudioSession.Mode
+    if backgroundMix {
+      mode = .default
+    } else if useIPhoneMode {
+      // iPhone mode: voiceChat for aggressive echo cancellation (mic + speaker co-located)
+      mode = .voiceChat
+    } else {
+      // Glasses mode: videoChat for mild AEC (mic is on glasses, speaker is on phone)
+      mode = .videoChat
+    }
+
+    var options: AVAudioSession.CategoryOptions
+    if backgroundMix {
+      // Meeting mode: absolute minimum — just mixWithOthers
+      // Do NOT request .defaultToSpeaker or .allowBluetooth — let the active
+      // call (phone/Zoom/FaceTime) keep full control of audio routing
+      options = [.mixWithOthers]
+    } else {
+      options = [.defaultToSpeaker, .allowBluetooth]
+    }
+
     try session.setCategory(
       .playAndRecord,
       mode: mode,
-      options: [.defaultToSpeaker, .allowBluetooth]
+      options: options
     )
     try session.setPreferredSampleRate(GeminiConfig.inputAudioSampleRate)
     try session.setPreferredIOBufferDuration(0.064)
-    try session.setActive(true)
-    NSLog("[Audio] Session mode: %@", useIPhoneMode ? "voiceChat (iPhone)" : "videoChat (glasses)")
+
+    if backgroundMix {
+      // Meeting mode: try setActive, if it fails try progressively simpler configs.
+      // Another app (phone call, Zoom) may have an exclusive audio session.
+      do {
+        try session.setActive(true)
+        NSLog("[Audio] Meeting mode: setActive succeeded with playAndRecord")
+      } catch {
+        NSLog("[Audio] Meeting mode: playAndRecord setActive failed (%@), trying record-only",
+              error.localizedDescription)
+        // Fallback: use .record category — less demanding, more likely to coexist
+        try session.setCategory(.record, mode: .default, options: [.mixWithOthers])
+        try session.setActive(true)
+        NSLog("[Audio] Meeting mode: setActive succeeded with record-only")
+      }
+    } else {
+      try session.setActive(true, options: [.notifyOthersOnDeactivation])
+    }
+    NSLog("[Audio] Session mode: %@, mixWithOthers: %@",
+          backgroundMix ? "default(mix)" : useIPhoneMode ? "voiceChat" : "videoChat",
+          backgroundMix ? "YES" : "NO")
+
+    observeInterruptions()
+  }
+
+  // MARK: - Audio interruption handling
+
+  private func observeInterruptions() {
+    interruptionObserver = NotificationCenter.default.addObserver(
+      forName: AVAudioSession.interruptionNotification,
+      object: AVAudioSession.sharedInstance(),
+      queue: .main
+    ) { [weak self] notification in
+      self?.handleInterruption(notification)
+    }
+  }
+
+  private func handleInterruption(_ notification: Notification) {
+    guard let info = notification.userInfo,
+          let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+          let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+    else { return }
+
+    switch type {
+    case .began:
+      NSLog("[Audio] Interruption began (phone call, Siri, etc.)")
+      isInterrupted = true
+      onInterruptionStateChanged?(true)
+
+    case .ended:
+      NSLog("[Audio] Interruption ended")
+      isInterrupted = false
+      onInterruptionStateChanged?(false)
+
+      // Check if we should resume
+      if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
+        let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+        if options.contains(.shouldResume) {
+          NSLog("[Audio] Resuming audio engine after interruption")
+          resumeAfterInterruption()
+        }
+      }
+
+    @unknown default:
+      break
+    }
+  }
+
+  private func resumeAfterInterruption() {
+    guard isCapturing, !audioEngine.isRunning else { return }
+    do {
+      try AVAudioSession.sharedInstance().setActive(true)
+      try audioEngine.start()
+      playerNode.play()
+      NSLog("[Audio] Audio engine resumed after interruption")
+    } catch {
+      NSLog("[Audio] Failed to resume after interruption: %@", error.localizedDescription)
+    }
   }
 
   func startCapture() throws {
     guard !isCapturing else { return }
+
+    // Reset audio engine to clean state before starting
+    audioEngine.reset()
 
     audioEngine.attach(playerNode)
     let playerFormat = AVAudioFormat(
@@ -60,10 +168,33 @@ class AudioManager {
           inputNativeFormat.commonFormat == .pcmFormatInt16 ? "Int16" : "Other",
           inputNativeFormat.sampleRate, inputNativeFormat.channelCount)
 
+    // Guard against invalid audio format (happens when audio session is reconfigured
+    // while another subsystem holds the audio route, e.g. DAT SDK streaming)
+    if inputNativeFormat.sampleRate <= 0 || inputNativeFormat.channelCount <= 0 {
+      NSLog("[Audio] Invalid input format (sampleRate=%.0f channels=%d) — retrying after session reactivation",
+            inputNativeFormat.sampleRate, inputNativeFormat.channelCount)
+      // Force reactivate the audio session and retry once
+      let session = AVAudioSession.sharedInstance()
+      try session.setActive(false, options: [.notifyOthersOnDeactivation])
+      try session.setActive(true)
+      audioEngine.reset()
+      audioEngine.attach(playerNode)
+      audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: playerFormat)
+      let retryFormat = audioEngine.inputNode.outputFormat(forBus: 0)
+      NSLog("[Audio] Retry input format: sampleRate=%.0f channels=%d",
+            retryFormat.sampleRate, retryFormat.channelCount)
+      if retryFormat.sampleRate <= 0 || retryFormat.channelCount <= 0 {
+        throw NSError(domain: "AudioManager", code: -1,
+                      userInfo: [NSLocalizedDescriptionKey: "Microphone unavailable. Close other audio apps and try again."])
+      }
+    }
+
+    let finalFormat = audioEngine.inputNode.outputFormat(forBus: 0)
+
     // Always tap in native format (Float32) and convert to Int16 PCM manually.
     // AVAudioEngine taps don't reliably convert between sample formats inline.
-    let needsResample = inputNativeFormat.sampleRate != GeminiConfig.inputAudioSampleRate
-        || inputNativeFormat.channelCount != GeminiConfig.audioChannels
+    let needsResample = finalFormat.sampleRate != GeminiConfig.inputAudioSampleRate
+        || finalFormat.channelCount != GeminiConfig.audioChannels
 
     NSLog("[Audio] Needs resample: %@", needsResample ? "YES" : "NO")
 
@@ -77,11 +208,12 @@ class AudioManager {
         channels: GeminiConfig.audioChannels,
         interleaved: false
       )!
-      converter = AVAudioConverter(from: inputNativeFormat, to: resampleFormat)
+      converter = AVAudioConverter(from: finalFormat, to: resampleFormat)
     }
 
     var tapCount = 0
-    inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputNativeFormat) { [weak self] buffer, _ in
+    let tapNode = audioEngine.inputNode
+    tapNode.installTap(onBus: 0, bufferSize: 4096, format: finalFormat) { [weak self] buffer, _ in
       guard let self else { return }
 
       tapCount += 1
@@ -169,11 +301,14 @@ class AudioManager {
 
   func stopCapture() {
     guard isCapturing else { return }
+    isCapturing = false
     audioEngine.inputNode.removeTap(onBus: 0)
     playerNode.stop()
     audioEngine.stop()
-    audioEngine.detach(playerNode)
-    isCapturing = false
+    if audioEngine.attachedNodes.contains(playerNode) {
+      audioEngine.detach(playerNode)
+    }
+    isInterrupted = false
     // Flush any remaining accumulated audio
     sendQueue.async {
       if !self.accumulatedData.isEmpty {
@@ -181,6 +316,11 @@ class AudioManager {
         self.accumulatedData = Data()
         self.onAudioCaptured?(chunk)
       }
+    }
+    // Remove interruption observer
+    if let observer = interruptionObserver {
+      NotificationCenter.default.removeObserver(observer)
+      interruptionObserver = nil
     }
   }
 

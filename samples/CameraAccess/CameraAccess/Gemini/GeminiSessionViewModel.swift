@@ -17,6 +17,15 @@ struct GolfState {
   var wind: String = ""
   var lastClub: String = ""
   var courseName: String = ""
+  // V2: course data + distance
+  var courseId: String = ""
+  var distanceToGreen: Int?
+  var holeYardage: Int?
+  var courseLoaded: Bool = false
+  var holesData: [GolfHoleData] = []
+  var lastHoleAskedForScore: Int = 0
+  var holeStartTime: Date?
+  var holeStartCoord: CLLocationCoordinate2D?
 }
 
 @MainActor
@@ -34,6 +43,12 @@ class GeminiSessionViewModel: ObservableObject {
   @Published var meetingLines: [MeetingLine] = []
   /// Golf round state for UI display (golf mode only)
   @Published var golfState: GolfState?
+  /// Translation lines for UI display (translation mode only)
+  @Published var translationLines: [TranslationLine] = []
+  /// Translation output mode (text/audio/both)
+  @Published var translationOutputMode: TranslationOutputMode = .both
+  @Published var showDiscordSharePrompt: Bool = false
+  var pendingDiscordSummary: DiscordWebhookService.SessionSummary?
   private let geminiService = GeminiLiveService()
   private let openClawBridge = OpenClawBridge()
   private var toolCallRouter: ToolCallRouter?
@@ -42,6 +57,7 @@ class GeminiSessionViewModel: ObservableObject {
   private var gpsInjectionTask: Task<Void, Never>?
   private var lastVideoFrameTime: Date = .distantPast
   private var stateObservation: Task<Void, Never>?
+  private var eagerPollingTask: Task<Void, Never>?
   private var reconnectTask: Task<Void, Never>?
   private var reconnectAttempts: Int = 0
   private let maxReconnectAttempts: Int = 5
@@ -54,6 +70,28 @@ class GeminiSessionViewModel: ObservableObject {
   /// Set by StreamSessionView when wiring ViewModels together.
   var currentFrameProvider: (() -> UIImage?)?
 
+  /// Called from StreamView.onAppear — checks OpenClaw connectivity immediately
+  /// and starts a lightweight polling loop for the status indicator.
+  func checkOpenClawOnAppear() {
+    guard GeminiConfig.isOpenClawConfigured else {
+      openClawConnectionState = .notConfigured
+      return
+    }
+    // Run connection check in background
+    Task { await openClawBridge.checkConnection() }
+    // Start lightweight polling for OpenClaw status (stops when session starts)
+    guard eagerPollingTask == nil else { return }
+    eagerPollingTask = Task { [weak self] in
+      while !Task.isCancelled {
+        try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+        guard !Task.isCancelled, let self else { break }
+        // Stop if a full session is active (stateObservation takes over)
+        if self.isGeminiActive { break }
+        self.openClawConnectionState = self.openClawBridge.connectionState
+      }
+    }
+  }
+
   func startSession() async {
     guard !isGeminiActive else { return }
 
@@ -61,6 +99,10 @@ class GeminiSessionViewModel: ObservableObject {
       errorMessage = "Gemini API key not configured. Open GeminiConfig.swift and replace YOUR_GEMINI_API_KEY with your key from https://aistudio.google.com/apikey"
       return
     }
+
+    // Stop eager polling — the 100ms stateObservation loop takes over
+    eagerPollingTask?.cancel()
+    eagerPollingTask = nil
 
     isGeminiActive = true
     sessionLog = []
@@ -84,6 +126,8 @@ class GeminiSessionViewModel: ObservableObject {
       guard let self else { return }
       // Meeting mode: never play audio — AI is silent note-taker
       if self.sessionMode == .meeting { return }
+      // Translation mode: suppress audio when textOnly
+      if self.sessionMode == .liveTranslation && self.translationOutputMode == .textOnly { return }
       self.audioManager.playAudio(data: data)
     }
 
@@ -109,6 +153,10 @@ class GeminiSessionViewModel: ObservableObject {
         if self.sessionMode == .meeting {
           self.appendMeetingLine(speaker: "Speaker", text: text)
         }
+        // Append original speech to translation lines
+        if self.sessionMode == .liveTranslation {
+          self.appendTranslationLine(text: text, isTranslation: false)
+        }
       }
     }
 
@@ -120,6 +168,10 @@ class GeminiSessionViewModel: ObservableObject {
         // In meeting mode, AI text = notes/summary (TEXT modality)
         if self.sessionMode == .meeting {
           self.appendMeetingLine(speaker: "Notes", text: text)
+        }
+        // Append translated text to translation lines
+        if self.sessionMode == .liveTranslation {
+          self.appendTranslationLine(text: text, isTranslation: true)
         }
       }
     }
@@ -138,12 +190,13 @@ class GeminiSessionViewModel: ObservableObject {
       }
     }
 
-    // In meeting mode: skip OpenClaw and tool wiring entirely
+    // In meeting and translation modes: skip OpenClaw and tool wiring entirely
     // Golf mode needs tools (execute) for scorecard/weather/course lookup
-    if sessionMode != .meeting {
-      // Check OpenClaw connectivity and start fresh session
-      await openClawBridge.checkConnection()
+    if sessionMode != .meeting && sessionMode != .liveTranslation {
+      // Check OpenClaw connectivity in background — don't block Gemini startup
       openClawBridge.resetSession()
+      openClawBridge.startHealthCheck()
+      Task { await self.openClawBridge.checkConnection() }
 
       // Wire tool call handling
       toolCallRouter = ToolCallRouter(bridge: openClawBridge)
@@ -183,13 +236,30 @@ class GeminiSessionViewModel: ObservableObject {
       }
     }
 
-    // Setup audio
+    // Setup audio — meeting mode uses backgroundMix so it coexists with other apps
     do {
-      try audioManager.setupAudioSession(useIPhoneMode: streamingMode == .iPhone)
+      try audioManager.setupAudioSession(
+        useIPhoneMode: streamingMode == .iPhone,
+        backgroundMix: sessionMode == .meeting
+      )
     } catch {
       errorMessage = "Audio setup failed: \(error.localizedDescription)"
       isGeminiActive = false
       return
+    }
+
+    // Handle audio interruptions (phone call, Siri, etc.)
+    audioManager.onInterruptionStateChanged = { [weak self] interrupted in
+      guard let self else { return }
+      Task { @MainActor in
+        if interrupted {
+          self.aiTranscript = "Audio paused (another app)"
+          NSLog("[GeminiSession] Audio interrupted — session still alive")
+        } else {
+          self.aiTranscript = ""
+          NSLog("[GeminiSession] Audio resumed")
+        }
+      }
     }
 
     // Connect to Gemini and wait for setupComplete
@@ -227,15 +297,34 @@ class GeminiSessionViewModel: ObservableObject {
   }
 
   func stopSession() {
-    // Golf mode: stop GPS and save final scorecard
+    // Golf mode: stop GPS, clear course data, save final scorecard
     if sessionMode == .golf {
       gpsInjectionTask?.cancel()
       gpsInjectionTask = nil
       locationManager.stop()
+      GolfCourseAPIService.shared.clearActiveCourse()
       saveGolfScorecard()
     }
+
+    // Snapshot session data for Discord share prompt before clearing state
+    let duration = sessionStartTime.map { Int(Date().timeIntervalSince($0)) } ?? 0
+    let hasContent = !sessionLog.isEmpty || !meetingLines.isEmpty || !translationLines.isEmpty || golfState != nil
+    if hasContent {
+      pendingDiscordSummary = DiscordWebhookService.SessionSummary(
+        mode: sessionMode,
+        streamingMode: streamingMode,
+        startTime: sessionStartTime,
+        durationSeconds: duration,
+        sessionLog: sessionLog,
+        meetingLines: meetingLines,
+        golfState: golfState,
+        translationLines: translationLines
+      )
+    }
+
     saveSessionTranscript()
     saveSessionToOpenClaw()
+    openClawBridge.stopHealthCheck()
     reconnectTask?.cancel()
     reconnectTask = nil
     reconnectAttempts = 0
@@ -252,8 +341,49 @@ class GeminiSessionViewModel: ObservableObject {
     aiTranscript = ""
     toolCallStatus = .idle
     meetingLines = []
+    translationLines = []
     golfState = nil
     sessionMode = .normal
+
+    // Show Discord share prompt if we have session data
+    if pendingDiscordSummary != nil {
+      showDiscordSharePrompt = true
+    }
+  }
+
+  func shareToDiscord() {
+    guard let summary = pendingDiscordSummary else { return }
+    pendingDiscordSummary = nil
+    showDiscordSharePrompt = false
+    Task {
+      let posted = await DiscordWebhookService.post(summary: summary)
+      if !posted {
+        NSLog("[Discord] Direct webhook failed, trying via OpenClaw...")
+        await shareToDiscordViaOpenClaw(summary: summary)
+      }
+    }
+  }
+
+  func dismissDiscordShare() {
+    pendingDiscordSummary = nil
+    showDiscordSharePrompt = false
+  }
+
+  private func shareToDiscordViaOpenClaw(summary: DiscordWebhookService.SessionSummary) async {
+    let state = openClawBridge.connectionState
+    guard state == .connected || state == .connectedViaTunnel else { return }
+    let modeLabel: String
+    switch summary.mode {
+    case .meeting: modeLabel = "meeting notes"
+    case .golf: modeLabel = "golf round summary"
+    case .liveTranslation: modeLabel = "translation session"
+    case .normal: modeLabel = "session notes"
+    }
+    let logText = summary.sessionLog.map { "\($0.role): \($0.text)" }.joined(separator: "\n")
+    let _ = await openClawBridge.delegateTask(
+      task: "Post the following \(modeLabel) to the #visionclaw Discord channel:\n\(logText)",
+      toolName: "discord_share"
+    )
   }
 
   private func appendMeetingLine(speaker: String, text: String) {
@@ -268,6 +398,24 @@ class GeminiSessionViewModel: ObservableObject {
     // Keep last 50 lines to avoid memory bloat
     if meetingLines.count > 50 {
       meetingLines.removeFirst(meetingLines.count - 50)
+    }
+  }
+
+  private func appendTranslationLine(text: String, isTranslation: Bool) {
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return }
+    // Consolidate consecutive lines of same type
+    if let last = translationLines.last, last.isTranslation == isTranslation {
+      var updated = translationLines
+      let combined = TranslationLine(time: last.time, text: last.text + " " + trimmed, isTranslation: isTranslation)
+      updated[updated.count - 1] = combined
+      translationLines = updated
+    } else {
+      translationLines.append(TranslationLine(time: Date(), text: trimmed, isTranslation: isTranslation))
+    }
+    // Keep last 40 lines to avoid memory bloat
+    if translationLines.count > 40 {
+      translationLines.removeFirst(translationLines.count - 40)
     }
   }
 
@@ -296,15 +444,17 @@ class GeminiSessionViewModel: ObservableObject {
 
     let filePrefix: String
     switch sessionMode {
-    case .meeting: filePrefix = "meeting"
-    case .golf:    filePrefix = "golf_round"
-    case .normal:  filePrefix = "session"
+    case .meeting:         filePrefix = "meeting"
+    case .golf:            filePrefix = "golf_round"
+    case .liveTranslation: filePrefix = "translation"
+    case .normal:          filePrefix = "session"
     }
     let modeLabel: String
     switch sessionMode {
-    case .meeting: modeLabel = "Meeting"
-    case .golf:    modeLabel = "Golf"
-    case .normal:  modeLabel = streamingMode == .iPhone ? "iPhone" : "Glasses"
+    case .meeting:         modeLabel = "Meeting"
+    case .golf:            modeLabel = "Golf"
+    case .liveTranslation: modeLabel = "Translation"
+    case .normal:          modeLabel = streamingMode == .iPhone ? "iPhone" : "Glasses"
     }
 
     var lines: [String] = []
@@ -425,23 +575,26 @@ class GeminiSessionViewModel: ObservableObject {
 
     let filePrefix: String
     switch sessionMode {
-    case .meeting: filePrefix = "meeting"
-    case .golf:    filePrefix = "golf_round"
-    case .normal:  filePrefix = "session"
+    case .meeting:         filePrefix = "meeting"
+    case .golf:            filePrefix = "golf_round"
+    case .liveTranslation: filePrefix = "translation"
+    case .normal:          filePrefix = "session"
     }
     let modeLabel: String
     switch sessionMode {
-    case .meeting: modeLabel = "Meeting"
-    case .golf:    modeLabel = "Golf"
-    case .normal:  modeLabel = streamingMode == .iPhone ? "iPhone" : "Glasses"
+    case .meeting:         modeLabel = "Meeting"
+    case .golf:            modeLabel = "Golf"
+    case .liveTranslation: modeLabel = "Translation"
+    case .normal:          modeLabel = streamingMode == .iPhone ? "iPhone" : "Glasses"
     }
 
     var lines: [String] = []
     let typeLabel: String
     switch sessionMode {
-    case .meeting: typeLabel = "Meeting"
-    case .golf:    typeLabel = "Golf Round"
-    case .normal:  typeLabel = "Session"
+    case .meeting:         typeLabel = "Meeting"
+    case .golf:            typeLabel = "Golf Round"
+    case .liveTranslation: typeLabel = "Translation"
+    case .normal:          typeLabel = "Session"
     }
     lines.append("# VisionClaw \(typeLabel) — \(startStr)")
     lines.append("Duration: \(minutes)m \(seconds)s | Mode: \(modeLabel)")
@@ -486,28 +639,70 @@ class GeminiSessionViewModel: ObservableObject {
   func startMeetingSession() async {
     sessionMode = .meeting
     await startSession()
+    guard isGeminiActive else {
+      sessionMode = .normal
+      return
+    }
   }
 
-  /// Start a session in golf caddie mode (GPS tracking, scorecard, club recommendations).
+  /// Start a session in live translation mode (simultaneous interpretation, no tools).
+  func startTranslationSession() async {
+    sessionMode = .liveTranslation
+    translationOutputMode = TranslationOutputMode(rawValue: SettingsManager.shared.translationOutputMode) ?? .both
+    await startSession()
+    guard isGeminiActive else {
+      sessionMode = .normal
+      return
+    }
+  }
+
+  /// Start a session in golf caddie mode (GPS + vision + course data + scorecard).
   func startGolfSession() async {
     sessionMode = .golf
     golfState = GolfState()
-    locationManager.requestPermissionAndStart()
+    locationManager.startGolfMode()
     await startSession()
+
+    // If Gemini connection failed, clean up golf state and bail
+    guard isGeminiActive else {
+      locationManager.stop()
+      golfState = nil
+      sessionMode = .normal
+      return
+    }
+
+    await loadCourseFromGPS()
     startGPSInjection()
   }
 
-  /// Periodically send GPS coordinates to Gemini as text context.
+  /// Periodically send GPS coordinates + distance to green to Gemini as text context.
   private func startGPSInjection() {
     gpsInjectionTask = Task { [weak self] in
       while !Task.isCancelled {
-        try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+        try? await Task.sleep(nanoseconds: 15_000_000_000) // 15 seconds
         guard !Task.isCancelled, let self else { break }
         guard self.isGeminiActive, self.connectionState == .ready else { continue }
         if let coord = self.locationManager.lastCoordinate {
-          let text = "[SYSTEM GPS UPDATE] Current location: \(String(format: "%.6f", coord.latitude)),\(String(format: "%.6f", coord.longitude))"
+          // Calculate distance to green
+          var distText = ""
+          if let holeData = self.currentHoleData() {
+            let dist = GolfCourseAPIService.shared.estimateDistanceToGreen(
+              from: coord,
+              hole: holeData,
+              teeCoord: self.golfState?.holeStartCoord
+            )
+            if let dist {
+              self.golfState?.distanceToGreen = dist
+              distText = " | Distance to green: \(dist) yards"
+            }
+          }
+
+          let text = "[SYSTEM GPS UPDATE] Current location: \(String(format: "%.6f", coord.latitude)),\(String(format: "%.6f", coord.longitude))\(distText)"
           self.geminiService.sendTextContext(text)
-          NSLog("[GolfGPS] Sent: %.4f, %.4f", coord.latitude, coord.longitude)
+          NSLog("[GolfGPS] Sent: %.4f, %.4f%@", coord.latitude, coord.longitude, distText)
+
+          // Check for hole transition
+          self.checkForHoleTransition(currentCoord: coord)
         }
       }
     }
@@ -537,6 +732,135 @@ class GeminiSessionViewModel: ObservableObject {
         NSLog("[GolfSession] OpenClaw scorecard save failed: %@", err)
       }
     }
+  }
+
+  // MARK: - Golf V2: Course Data + Hole Transition
+
+  /// Wait for GPS fix and load nearest course via API
+  private func loadCourseFromGPS() async {
+    guard GolfCourseAPIService.shared.isConfigured else {
+      NSLog("[GolfSession] Golf Course API not configured, skipping course load")
+      return
+    }
+
+    // Wait up to 10 seconds for GPS fix
+    var coord: CLLocationCoordinate2D?
+    for _ in 0..<20 {
+      if let c = locationManager.lastCoordinate {
+        coord = c
+        break
+      }
+      try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+    }
+
+    guard let coord else {
+      NSLog("[GolfSession] No GPS fix after 10s, course load skipped")
+      return
+    }
+
+    guard let course = await GolfCourseAPIService.shared.loadNearestCourse(lat: coord.latitude, lng: coord.longitude) else {
+      NSLog("[GolfSession] No course found near GPS")
+      return
+    }
+
+    golfState?.courseId = course.id
+    golfState?.courseName = course.name
+    golfState?.courseLoaded = true
+    golfState?.holesData = course.holes
+    golfState?.holeStartCoord = coord
+
+    // Set par for first hole
+    if let firstHole = course.holes.first(where: { $0.number == 1 }) {
+      golfState?.par = firstHole.par
+      golfState?.holeYardage = firstHole.yardage
+    }
+
+    NSLog("[GolfSession] Course loaded: %@ (%d holes)", course.name, course.holes.count)
+
+    // Inject course data to Gemini
+    injectCourseDataToGemini(course: course)
+  }
+
+  /// Send full course data as system context to Gemini
+  private func injectCourseDataToGemini(course: GolfCourse) {
+    var lines: [String] = []
+    lines.append("[SYSTEM COURSE DATA]")
+    lines.append("Course: \(course.name)")
+    lines.append("Location: \(course.city), \(course.state), \(course.country)")
+    lines.append("Holes:")
+    for hole in course.holes {
+      var holeLine = "  Hole \(hole.number): Par \(hole.par), \(hole.yardage) yards"
+      if let hcp = hole.handicapIndex { holeLine += ", HCP \(hcp)" }
+      if let lat = hole.greenLatitude, let lng = hole.greenLongitude {
+        holeLine += ", Green: \(String(format: "%.6f", lat)),\(String(format: "%.6f", lng))"
+      }
+      lines.append(holeLine)
+    }
+    let text = lines.joined(separator: "\n")
+    geminiService.sendTextContext(text)
+  }
+
+  /// Get hole data for current hole number
+  private func currentHoleData() -> GolfHoleData? {
+    guard let state = golfState else { return nil }
+    return state.holesData.first(where: { $0.number == state.currentHole })
+  }
+
+  /// Detect when golfer has finished a hole (near green then moves away)
+  private func checkForHoleTransition(currentCoord: CLLocationCoordinate2D) {
+    guard let state = golfState, state.courseLoaded else { return }
+    guard let holeData = currentHoleData() else { return }
+    guard state.lastHoleAskedForScore < state.currentHole else { return }
+
+    // Check if near the green (within 20 yards) using green coords or distance estimate
+    if let dist = GolfCourseAPIService.shared.distanceToGreen(from: currentCoord, hole: holeData) {
+      // If we were near the green (< 20y) and now moving away (> 40y), likely hole complete
+      if dist > 40 && (state.distanceToGreen ?? 999) < 25 {
+        triggerHoleComplete()
+      }
+    } else if let dist = state.distanceToGreen, dist < 10 {
+      // Without green coords, use the estimate — if distance is very small, golfer is on green
+      // We'll rely on distance increasing significantly on next check
+      // For now, mark that we've been on the green
+    }
+  }
+
+  /// Send hole complete prompt and ask for score
+  private func triggerHoleComplete() {
+    guard let state = golfState else { return }
+    let holeNum = state.currentHole
+    golfState?.lastHoleAskedForScore = holeNum
+
+    let text = "[SYSTEM HOLE COMPLETE] The golfer appears to have finished hole \(holeNum) (par \(state.par)). Ask them for their score on this hole."
+    geminiService.sendTextContext(text)
+    NSLog("[GolfSession] Hole %d complete — asking for score", holeNum)
+  }
+
+  /// Advance to next hole and inject context
+  func advanceToNextHole() {
+    guard var state = golfState else { return }
+    let nextHole = state.currentHole + 1
+    guard nextHole <= 18 else { return }
+
+    state.currentHole = nextHole
+    state.holeStartTime = Date()
+    state.holeStartCoord = locationManager.lastCoordinate
+    state.distanceToGreen = nil
+
+    if let holeData = state.holesData.first(where: { $0.number == nextHole }) {
+      state.par = holeData.par
+      state.holeYardage = holeData.yardage
+    }
+
+    golfState = state
+
+    // Inject next hole context
+    var text = "[SYSTEM NEXT HOLE] Now on hole \(nextHole)"
+    if let holeData = currentHoleData() {
+      text += ", par \(holeData.par), \(holeData.yardage) yards"
+    }
+    geminiService.sendTextContext(text)
+    NSLog("[GolfSession] Advanced to hole %d", nextHole)
   }
 
   func sendVideoFrameIfThrottled(image: UIImage) {

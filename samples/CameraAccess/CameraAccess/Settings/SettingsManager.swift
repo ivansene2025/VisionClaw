@@ -12,7 +12,12 @@ final class SettingsManager {
     case openClawHookToken
     case openClawGatewayToken
     case geminiSystemPrompt
+    case openClawTunnelURL
     case webrtcSignalingURL
+    case translationTargetLanguage
+    case translationOutputMode
+    case golfCourseAPIKey
+    case discordVisionClawWebhook
   }
 
   private init() {}
@@ -54,6 +59,11 @@ final class SettingsManager {
     set { defaults.set(newValue, forKey: Key.openClawGatewayToken.rawValue) }
   }
 
+  var openClawTunnelURL: String {
+    get { defaults.string(forKey: Key.openClawTunnelURL.rawValue) ?? Secrets.openClawTunnelURL }
+    set { defaults.set(newValue, forKey: Key.openClawTunnelURL.rawValue) }
+  }
+
   // MARK: - WebRTC
 
   var webrtcSignalingURL: String {
@@ -61,11 +71,39 @@ final class SettingsManager {
     set { defaults.set(newValue, forKey: Key.webrtcSignalingURL.rawValue) }
   }
 
+  // MARK: - Translation
+
+  var translationTargetLanguage: String {
+    get { defaults.string(forKey: Key.translationTargetLanguage.rawValue) ?? "English" }
+    set { defaults.set(newValue, forKey: Key.translationTargetLanguage.rawValue) }
+  }
+
+  var translationOutputMode: String {
+    get { defaults.string(forKey: Key.translationOutputMode.rawValue) ?? "both" }
+    set { defaults.set(newValue, forKey: Key.translationOutputMode.rawValue) }
+  }
+
+  // MARK: - Golf
+
+  var golfCourseAPIKey: String {
+    get { defaults.string(forKey: Key.golfCourseAPIKey.rawValue) ?? "" }
+    set { defaults.set(newValue, forKey: Key.golfCourseAPIKey.rawValue) }
+  }
+
+  // MARK: - Discord
+
+  var discordVisionClawWebhook: String {
+    get { defaults.string(forKey: Key.discordVisionClawWebhook.rawValue) ?? "" }
+    set { defaults.set(newValue, forKey: Key.discordVisionClawWebhook.rawValue) }
+  }
+
   // MARK: - Reset
 
   func resetAll() {
     for key in [Key.geminiAPIKey, .geminiSystemPrompt, .openClawHost, .openClawPort,
-                .openClawHookToken, .openClawGatewayToken, .webrtcSignalingURL] {
+                .openClawHookToken, .openClawGatewayToken, .openClawTunnelURL, .webrtcSignalingURL,
+                .translationTargetLanguage, .translationOutputMode, .golfCourseAPIKey,
+                .discordVisionClawWebhook] {
       defaults.removeObject(forKey: key.rawValue)
     }
   }

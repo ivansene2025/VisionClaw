@@ -45,7 +45,9 @@
 		A1B2C3D42F0A000200000004 /* GeminiSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000004 /* GeminiSessionViewModel.swift */; };
 		A1B2C3D42F0A000200000005 /* GeminiOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000005 /* GeminiOverlayView.swift */; };
 		A1B2C3D42F0A000200000006 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000006 /* LocationManager.swift */; };
+		A1B2C3D42F0A000200000009 /* GolfCourseAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000009 /* GolfCourseAPIService.swift */; };
 		A1B2C3D42F0A000200000007 /* GolfOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000007 /* GolfOverlayView.swift */; };
+		A1B2C3D42F0A000200000008 /* TranslationOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D42F0A000100000008 /* TranslationOverlayView.swift */; };
 		E66D30242E7DA71900470B48 /* MockDeviceKitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E66D30232E7DA71900470B48 /* MockDeviceKitButton.swift */; };
 		E6A188482EB918740097D0E1 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A188472EB918740097D0E1 /* StreamView.swift */; };
 		E6DA451D2E79A63100E3F688 /* MockDeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DA45182E79A63100E3F688 /* MockDeviceCardView.swift */; };
@@ -116,7 +118,9 @@
 		A1B2C3D42F0A000100000004 /* GeminiSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiSessionViewModel.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000005 /* GeminiOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiOverlayView.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000006 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		A1B2C3D42F0A000100000009 /* GolfCourseAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfCourseAPIService.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000007 /* GolfOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfOverlayView.swift; sourceTree = "<group>"; };
+		A1B2C3D42F0A000100000008 /* TranslationOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationOverlayView.swift; sourceTree = "<group>"; };
 		E66D30232E7DA71900470B48 /* MockDeviceKitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitButton.swift; sourceTree = "<group>"; };
 		E699CC952E8150670052C240 /* CameraAccessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CameraAccessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6A188472EB918740097D0E1 /* StreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamView.swift; sourceTree = "<group>"; };
@@ -231,6 +235,7 @@
 				E6DA45172E79A63100E3F688 /* CardView.swift */,
 				A1B2C3D42F0A000100000005 /* GeminiOverlayView.swift */,
 				A1B2C3D42F0A000100000007 /* GolfOverlayView.swift */,
+				A1B2C3D42F0A000100000008 /* TranslationOverlayView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -275,6 +280,7 @@
 				A1B2C3D42F0A000100000001 /* GeminiConfig.swift */,
 				A1B2C3D42F0A000100000002 /* GeminiLiveService.swift */,
 				A1B2C3D42F0A000100000004 /* GeminiSessionViewModel.swift */,
+				A1B2C3D42F0A000100000009 /* GolfCourseAPIService.swift */,
 				A1B2C3D42F0A000100000006 /* LocationManager.swift */,
 			);
 			path = Gemini;
@@ -440,7 +446,9 @@
 				9DD894B32F4047630090B9B9 /* SettingsView.swift in Sources */,
 				A1B2C3D42F0A000200000005 /* GeminiOverlayView.swift in Sources */,
 				A1B2C3D42F0A000200000006 /* LocationManager.swift in Sources */,
+				A1B2C3D42F0A000200000009 /* GolfCourseAPIService.swift in Sources */,
 				A1B2C3D42F0A000200000007 /* GolfOverlayView.swift in Sources */,
+				A1B2C3D42F0A000200000008 /* TranslationOverlayView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

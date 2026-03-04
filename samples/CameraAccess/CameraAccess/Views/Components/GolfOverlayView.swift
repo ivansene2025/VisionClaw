@@ -7,9 +7,17 @@ struct GolfOverlay: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      // Top bar: golf pill + status + score badge
+      // Top bar: golf pill + course name + status + score badge
       HStack(spacing: 8) {
-        GolfModePill()
+        VStack(alignment: .leading, spacing: 2) {
+          GolfModePill()
+          if let state = geminiVM.golfState, !state.courseName.isEmpty {
+            Text(state.courseName)
+              .font(.system(size: 11, weight: .medium))
+              .foregroundColor(.white.opacity(0.5))
+              .lineLimit(1)
+          }
+        }
         GeminiStatusBar(geminiVM: geminiVM)
         Spacer()
         if let state = geminiVM.golfState {
@@ -134,11 +142,20 @@ struct ScoreToParBadge: View {
 struct GolfHoleCard: View {
   let state: GolfState
 
+  private var distText: String {
+    if let dist = state.distanceToGreen {
+      return "\(dist)y"
+    }
+    return "—"
+  }
+
   var body: some View {
     HStack(spacing: 0) {
       cardItem(label: "HOLE", value: "\(state.currentHole)")
       divider
       cardItem(label: "PAR", value: state.par > 0 ? "\(state.par)" : "—")
+      divider
+      distItem(label: "DIST", value: distText)
       divider
       cardItem(label: "WIND", value: state.wind.isEmpty ? "—" : state.wind)
       divider
@@ -160,6 +177,21 @@ struct GolfHoleCard: View {
       Text(value)
         .font(.system(size: 16, weight: .bold, design: .rounded))
         .foregroundColor(.white)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+    }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, 10)
+  }
+
+  private func distItem(label: String, value: String) -> some View {
+    VStack(spacing: 3) {
+      Text(label)
+        .font(.system(size: 9, weight: .semibold))
+        .foregroundColor(.green.opacity(0.7))
+      Text(value)
+        .font(.system(size: 18, weight: .bold, design: .rounded))
+        .foregroundColor(.green)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
     }

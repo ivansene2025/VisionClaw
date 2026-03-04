@@ -133,10 +133,14 @@ struct NonStreamView: View {
           .cornerRadius(30)
         }
 
-        // Golf Mode: AI caddie with GPS, scorecard, club recommendations
+        // Golf Mode: AI caddie with vision + GPS + course data
         Button(action: {
-          viewModel.handleStartAudioOnly()
           Task {
+            if viewModel.hasActiveDevice {
+              await viewModel.handleStartStreaming() // Glasses camera
+            } else {
+              viewModel.handleStartAudioOnly() // Fallback: voice-only
+            }
             await geminiVM.startGolfSession()
           }
         }) {
@@ -150,6 +154,26 @@ struct NonStreamView: View {
           .frame(maxWidth: .infinity)
           .frame(height: 56)
           .background(Color.green)
+          .cornerRadius(30)
+        }
+
+        // Translation Mode: real-time simultaneous interpretation
+        Button(action: {
+          viewModel.handleStartAudioOnly()
+          Task {
+            await geminiVM.startTranslationSession()
+          }
+        }) {
+          HStack(spacing: 8) {
+            Image(systemName: "globe")
+              .font(.system(size: 15))
+            Text("Translation Mode")
+              .font(.system(size: 15, weight: .semibold))
+          }
+          .foregroundColor(.white)
+          .frame(maxWidth: .infinity)
+          .frame(height: 56)
+          .background(Color.blue)
           .cornerRadius(30)
         }
 

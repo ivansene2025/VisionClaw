@@ -21,8 +21,18 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     }
   }
 
+  /// High-accuracy GPS mode for golf: best-for-navigation accuracy, 3m distance filter
+  func startGolfMode() {
+    manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+    manager.distanceFilter = 3 // ~3 yards
+    requestPermissionAndStart()
+  }
+
   func stop() {
     manager.stopUpdatingLocation()
+    // Reset to defaults
+    manager.desiredAccuracy = kCLLocationAccuracyBest
+    manager.distanceFilter = 10
   }
 
   var lastCoordinate: CLLocationCoordinate2D? {

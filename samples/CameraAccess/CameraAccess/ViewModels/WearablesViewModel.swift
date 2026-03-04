@@ -30,12 +30,15 @@ class WearablesViewModel: ObservableObject {
   @Published var showError: Bool = false
   @Published var errorMessage: String = ""
   @Published var skipToIPhoneMode: Bool = false
+  @Published var activeDeviceName: String?
+  @Published var activeDeviceLinkState: LinkState = .disconnected
 
   private var registrationTask: Task<Void, Never>?
   private var deviceStreamTask: Task<Void, Never>?
   private var setupDeviceStreamTask: Task<Void, Never>?
   private let wearables: WearablesInterface
   private var compatibilityListenerTokens: [DeviceIdentifier: AnyListenerToken] = [:]
+  private var linkStateListenerToken: AnyListenerToken?
 
   init(wearables: WearablesInterface) {
     self.wearables = wearables
@@ -65,6 +68,31 @@ class WearablesViewModel: ObservableObject {
     setupDeviceStreamTask?.cancel()
   }
 
+  private func updateActiveDeviceInfo(devices: [DeviceIdentifier]) {
+    // Cancel previous link state listener
+    if let token = linkStateListenerToken {
+      Task { await token.cancel() }
+      linkStateListenerToken = nil
+    }
+
+    guard let firstId = devices.first,
+          let device = wearables.deviceForIdentifier(firstId) else {
+      activeDeviceName = nil
+      activeDeviceLinkState = .disconnected
+      return
+    }
+
+    activeDeviceName = device.name
+    activeDeviceLinkState = device.linkState
+
+    let token = device.addLinkStateListener { [weak self] newState in
+      Task { @MainActor in
+        self?.activeDeviceLinkState = newState
+      }
+    }
+    linkStateListenerToken = token
+  }
+
   private func setupDeviceStream() async {
     if let task = deviceStreamTask, !task.isCancelled {
       task.cancel()
@@ -78,6 +106,8 @@ class WearablesViewModel: ObservableObject {
         #endif
         // Monitor compatibility for each device
         monitorDeviceCompatibility(devices: devices)
+        // Track active device name and link state
+        updateActiveDeviceInfo(devices: devices)
       }
     }
   }

@@ -195,9 +195,10 @@ class GeminiLiveService: ObservableObject {
   private func sendSetupMessage() {
     let systemInstruction: String
     switch sessionMode {
-    case .normal:  systemInstruction = GeminiConfig.systemInstruction
-    case .meeting: systemInstruction = GeminiConfig.meetingModeSystemInstruction
-    case .golf:    systemInstruction = GeminiConfig.golfModeSystemInstruction
+    case .normal:          systemInstruction = GeminiConfig.systemInstruction
+    case .meeting:         systemInstruction = GeminiConfig.meetingModeSystemInstruction
+    case .golf:            systemInstruction = GeminiConfig.golfModeSystemInstruction
+    case .liveTranslation: systemInstruction = GeminiConfig.translationModeSystemInstruction
     }
 
     // All modes use AUDIO modality (native audio model requires it).
@@ -225,15 +226,15 @@ class GeminiLiveService: ObservableObject {
           "silenceDurationMs": 500,
           "prefixPaddingMs": 40
         ],
-        "activityHandling": sessionMode == .meeting ? "NO_INTERRUPTION" : "START_OF_ACTIVITY_INTERRUPTS",
+        "activityHandling": (sessionMode == .meeting || sessionMode == .liveTranslation) ? "NO_INTERRUPTION" : "START_OF_ACTIVITY_INTERRUPTS",
         "turnCoverage": "TURN_INCLUDES_ALL_INPUT"
       ],
       "inputAudioTranscription": [:] as [String: Any],
       "outputAudioTranscription": [:] as [String: Any]
     ]
 
-    // Include tools in normal and golf modes — meeting mode has NO tools
-    if sessionMode != .meeting {
+    // Include tools in normal and golf modes — meeting and translation modes have NO tools
+    if sessionMode != .meeting && sessionMode != .liveTranslation {
       setupContent["tools"] = [
         [
           "functionDeclarations": ToolDeclarations.allDeclarations()

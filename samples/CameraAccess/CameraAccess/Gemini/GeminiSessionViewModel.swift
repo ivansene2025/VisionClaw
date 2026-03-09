@@ -770,6 +770,10 @@ class GeminiSessionViewModel: ObservableObject {
       return
     }
 
+    // Store all nearby courses for picker, then show confirmation
+    let allCourses = await GolfCourseAPIService.shared.searchNearbyCourses(lat: coord.latitude, lng: coord.longitude)
+    golfState?.nearbyCoursesForPicker = allCourses
+    golfState?.pendingCourseName = course.name
     golfState?.courseId = course.id
     golfState?.courseName = course.name
     golfState?.courseLoaded = true
@@ -786,6 +790,9 @@ class GeminiSessionViewModel: ObservableObject {
 
     // Inject course data to Gemini
     injectCourseDataToGemini(course: course)
+
+    // Fetch wind conditions
+    await fetchWindConditions(lat: coord.latitude, lng: coord.longitude)
   }
 
   /// Send full course data as system context to Gemini

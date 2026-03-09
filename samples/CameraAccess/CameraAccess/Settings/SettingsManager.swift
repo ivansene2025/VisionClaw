@@ -17,6 +17,7 @@ final class SettingsManager {
     case translationTargetLanguage
     case translationOutputMode
     case golfCourseAPIKey
+    case golfSevenIronCarry
     case discordVisionClawWebhook
   }
 

@@ -1,0 +1,120 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "meta-wearables-dat-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/facebook/meta-wearables-dat-ios",
+          "name" : "meta-wearables-dat-ios"
+        },
+        "path" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/SourcePackages/checkouts/meta-wearables-dat-ios/MWDATCamera.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "MWDATCamera"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "meta-wearables-dat-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/facebook/meta-wearables-dat-ios",
+          "name" : "meta-wearables-dat-ios"
+        },
+        "path" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/SourcePackages/checkouts/meta-wearables-dat-ios/MWDATCore.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "MWDATCore"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "meta-wearables-dat-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/facebook/meta-wearables-dat-ios",
+          "name" : "meta-wearables-dat-ios"
+        },
+        "path" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/SourcePackages/checkouts/meta-wearables-dat-ios/MWDATMockDevice.xcframework",
+        "source" : {
+          "type" : "local"
+        },
+        "targetName" : "MWDATMockDevice"
+      },
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "webrtc",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/stasel/WebRTC.git",
+          "name" : "WebRTC"
+        },
+        "path" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/SourcePackages/artifacts/webrtc/WebRTC/WebRTC.xcframework",
+        "source" : {
+          "checksum" : "0d61faf67dd145545bf8a0017bdcdbe7a9a1f3a96cce0d501e526655711d98d2",
+          "type" : "remote",
+          "url" : "https://github.com/stasel/WebRTC/releases/download/140.0.0/WebRTC-M140.xcframework.zip"
+        },
+        "targetName" : "WebRTC"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "meta-wearables-dat-ios",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/facebook/meta-wearables-dat-ios",
+          "name" : "meta-wearables-dat-ios"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "b67454b6f081373f757476ecb3b4973bf33bc326",
+            "version" : "0.4.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "meta-wearables-dat-ios"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "webrtc",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/stasel/WebRTC.git",
+          "name" : "WebRTC"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "86dbb5cb57e4da009b859a6245b1c10d610f215a",
+            "version" : "140.0.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "WebRTC"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

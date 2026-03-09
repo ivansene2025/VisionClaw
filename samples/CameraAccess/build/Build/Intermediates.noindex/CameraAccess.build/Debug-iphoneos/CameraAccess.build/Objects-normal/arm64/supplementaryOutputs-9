@@ -1,0 +1,30 @@
+{
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Gemini/AudioManager.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/AudioManager.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/AudioManager.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/AudioManager.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/AudioManager.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/AudioManager.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Gemini/GeminiSessionViewModel.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiSessionViewModel.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiSessionViewModel.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiSessionViewModel.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiSessionViewModel.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiSessionViewModel.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Settings/SettingsManager.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsManager.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsManager.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsManager.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsManager.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsManager.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Settings/SettingsView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/SettingsView.swiftdeps"
+  }
+}

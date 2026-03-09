@@ -1,0 +1,37 @@
+{
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/ViewModels/StreamSessionViewModel.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionViewModel.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionViewModel.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionViewModel.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionViewModel.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionViewModel.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/Components/CardView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/CardView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/CardView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/CardView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/CardView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/CardView.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/MockDeviceKit/MockDeviceCardView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceCardView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceCardView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceCardView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceCardView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceCardView.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/MockDeviceKit/MockDeviceKitView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceKitView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceKitView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceKitView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceKitView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/MockDeviceKitView.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/StreamSessionView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/StreamSessionView.swiftdeps"
+  }
+}

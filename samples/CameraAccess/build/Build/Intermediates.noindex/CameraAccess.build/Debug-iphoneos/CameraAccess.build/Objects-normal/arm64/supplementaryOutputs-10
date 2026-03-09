@@ -1,0 +1,30 @@
+{
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Gemini/LocationManager.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/LocationManager.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/LocationManager.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/LocationManager.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/LocationManager.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/LocationManager.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/Components/GeminiOverlayView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiOverlayView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiOverlayView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiOverlayView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiOverlayView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeminiOverlayView.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/CameraAccess/Views/Components/GolfOverlayView.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GolfOverlayView.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GolfOverlayView.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GolfOverlayView.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GolfOverlayView.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GolfOverlayView.swiftdeps"
+  },
+  "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/isdc/VisionClaw/samples/CameraAccess/build/Build/Intermediates.noindex/CameraAccess.build/Debug-iphoneos/CameraAccess.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  }
+}

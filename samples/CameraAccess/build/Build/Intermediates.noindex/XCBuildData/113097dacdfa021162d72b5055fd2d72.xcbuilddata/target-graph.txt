@@ -1,0 +1,8 @@
+Target dependency graph (4 targets)
+Target 'CameraAccess' in project 'CameraAccess'
+➜ Explicit dependency on target 'WebRTC' in project 'WebRTC'
+➜ Explicit dependency on target 'MWDATCore' in project 'MetaWearablesDAT'
+➜ Explicit dependency on target 'MWDATCamera' in project 'MetaWearablesDAT'
+Target 'MWDATCamera' in project 'MetaWearablesDAT' (no dependencies)
+Target 'MWDATCore' in project 'MetaWearablesDAT' (no dependencies)
+Target 'WebRTC' in project 'WebRTC' (no dependencies)

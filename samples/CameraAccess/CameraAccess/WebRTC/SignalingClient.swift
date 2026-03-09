@@ -28,7 +28,7 @@ class SignalingClient {
 
   init() {
     let config = URLSessionConfiguration.default
-    config.timeoutIntervalForRequest = 10
+    config.timeoutIntervalForRequest = 15
     self.urlSession = URLSession(
       configuration: config, delegate: delegate, delegateQueue: nil)
   }

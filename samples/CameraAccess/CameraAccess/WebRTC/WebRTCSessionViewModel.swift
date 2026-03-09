@@ -28,8 +28,11 @@ class WebRTCSessionViewModel: ObservableObject {
   private var delegateAdapter: WebRTCDelegateAdapter?
 
   /// Saved room code for reconnecting after app backgrounding.
+  /// Saved room code for reconnecting after app backgrounding.
   private var savedRoomCode: String?
   private var foregroundObserver: Any?
+  private var signalingRetryCount = 0
+  private static let maxSignalingRetries = 2
 
   func startSession() async {
     guard !isActive else { return }
@@ -41,6 +44,7 @@ class WebRTCSessionViewModel: ObservableObject {
     isActive = true
     connectionState = .connecting
     savedRoomCode = nil
+    signalingRetryCount = 0
 
     // Start immediately with STUN-only (no network wait)
     setupWebRTCClient(iceServers: nil)
@@ -93,6 +97,8 @@ class WebRTCSessionViewModel: ObservableObject {
   // MARK: - WebRTC + Signaling Setup
 
   private func setupWebRTCClient(iceServers: [RTCIceServer]?) {
+    // Close old peer connection before creating a new one
+    webRTCClient?.close()
     let client = WebRTCClient()
     let adapter = WebRTCDelegateAdapter(viewModel: self)
     delegateAdapter = adapter
@@ -109,6 +115,7 @@ class WebRTCSessionViewModel: ObservableObject {
 
     signaling.onConnected = { [weak self] in
       Task { @MainActor in
+        self?.signalingRetryCount = 0
         if let code = rejoinCode {
           NSLog("[WebRTC] Reconnected, rejoining room: %@", code)
           self?.signalingClient?.rejoinRoom(code: code)
@@ -127,13 +134,22 @@ class WebRTCSessionViewModel: ObservableObject {
     signaling.onDisconnected = { [weak self] reason in
       Task { @MainActor in
         guard let self, self.isActive else { return }
-        // Don't fully stop -- mark as backgrounded so we can reconnect
+        // If we have a saved room, mark as backgrounded for reconnect
         if self.savedRoomCode != nil {
           self.connectionState = .backgrounded
           NSLog("[WebRTC] Signaling disconnected (backgrounded), will rejoin: %@", reason ?? "unknown")
+        } else if self.signalingRetryCount < Self.maxSignalingRetries {
+          // Retry signaling connection (Fly.io cold start can be slow)
+          self.signalingRetryCount += 1
+          NSLog("[WebRTC] Signaling failed (%@), retrying (%d/%d)...",
+                reason ?? "unknown", self.signalingRetryCount, Self.maxSignalingRetries)
+          self.connectionState = .connecting
+          try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2s backoff
+          guard self.isActive else { return }
+          self.connectSignaling(rejoinCode: nil)
         } else {
           self.stopSession()
-          self.errorMessage = "Signaling disconnected: \(reason ?? "Unknown")"
+          self.errorMessage = "Could not connect to live stream server. Check your connection and try again."
         }
       }
     }

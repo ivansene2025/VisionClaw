@@ -15,6 +15,7 @@ struct SettingsView: View {
   @State private var translationTargetLanguage: String = ""
   @State private var translationOutputMode: String = ""
   @State private var golfCourseAPIKey: String = ""
+  @State private var golfSevenIronCarry: String = ""
   @State private var discordVisionClawWebhook: String = ""
   @State private var showResetConfirmation = false
 

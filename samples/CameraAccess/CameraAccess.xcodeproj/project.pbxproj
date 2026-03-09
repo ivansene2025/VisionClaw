@@ -450,6 +450,7 @@
 				A1B2C3D42F0A000200000004 /* GeminiSessionViewModel.swift in Sources */,
 				9DD894B22F4047630090B9B9 /* SettingsManager.swift in Sources */,
 				9DD894B32F4047630090B9B9 /* SettingsView.swift in Sources */,
+				9DD894B42F4047630090B9B9 /* KeychainHelper.swift in Sources */,
 				A1B2C3D42F0A000200000005 /* GeminiOverlayView.swift in Sources */,
 				A1B2C3D42F0A000200000006 /* LocationManager.swift in Sources */,
 				A1B2C3D42F0A000200000009 /* GolfCourseAPIService.swift in Sources */,

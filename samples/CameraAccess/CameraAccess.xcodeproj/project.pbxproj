@@ -120,6 +120,7 @@
 		A1B2C3D42F0A000100000005 /* GeminiOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiOverlayView.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000006 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000009 /* GolfCourseAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfCourseAPIService.swift; sourceTree = "<group>"; };
+		A1B2C3D42F0A00010000000A /* ClubDistanceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubDistanceModel.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000007 /* GolfOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfOverlayView.swift; sourceTree = "<group>"; };
 		A1B2C3D42F0A000100000008 /* TranslationOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationOverlayView.swift; sourceTree = "<group>"; };
 		E66D30232E7DA71900470B48 /* MockDeviceKitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitButton.swift; sourceTree = "<group>"; };

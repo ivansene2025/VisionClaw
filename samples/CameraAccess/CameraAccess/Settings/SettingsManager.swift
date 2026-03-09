@@ -91,6 +91,15 @@ final class SettingsManager {
     set { defaults.set(newValue, forKey: Key.golfCourseAPIKey.rawValue) }
   }
 
+  /// 7-iron carry distance in yards — used to extrapolate all club distances
+  var golfSevenIronCarry: Int {
+    get {
+      let stored = defaults.integer(forKey: Key.golfSevenIronCarry.rawValue)
+      return stored > 0 ? stored : 140
+    }
+    set { defaults.set(newValue, forKey: Key.golfSevenIronCarry.rawValue) }
+  }
+
   // MARK: - Discord
 
   var discordVisionClawWebhook: String {

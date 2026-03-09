@@ -207,6 +207,7 @@ struct SettingsView: View {
     translationTargetLanguage = settings.translationTargetLanguage
     translationOutputMode = settings.translationOutputMode
     golfCourseAPIKey = settings.golfCourseAPIKey
+    golfSevenIronCarry = String(settings.golfSevenIronCarry)
     discordVisionClawWebhook = settings.discordVisionClawWebhook
   }
 

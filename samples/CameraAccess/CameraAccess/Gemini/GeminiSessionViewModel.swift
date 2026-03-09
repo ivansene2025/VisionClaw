@@ -15,17 +15,24 @@ struct GolfState {
   var scoreToPar: Int = 0
   var totalScore: Int = 0
   var wind: String = ""
+  var windSpeed: Double?       // mph
+  var windDirection: String = "" // e.g. "NW"
   var lastClub: String = ""
+  var recommendedClub: String = ""
   var courseName: String = ""
   // V2: course data + distance
   var courseId: String = ""
   var distanceToGreen: Int?
   var holeYardage: Int?
   var courseLoaded: Bool = false
+  var courseConfirmed: Bool = false
+  var pendingCourseName: String = ""  // course detected, awaiting confirmation
+  var nearbyCoursesForPicker: [GolfCourse] = []
   var holesData: [GolfHoleData] = []
   var lastHoleAskedForScore: Int = 0
   var holeStartTime: Date?
   var holeStartCoord: CLLocationCoordinate2D?
+  var showMiniMap: Bool = false
 }
 
 @MainActor

@@ -23,21 +23,25 @@ if (!EXPRESSTURN_SERVER || !EXPRESSTURN_USER || !EXPRESSTURN_PASS) {
 }
 
 function getTurnCredentials() {
-  return {
-    iceServers: [
-      {
-        urls: [
-          `turn:${EXPRESSTURN_SERVER}:3478`,
-          `turn:${EXPRESSTURN_SERVER}:3478?transport=tcp`,
-          `turn:${EXPRESSTURN_SERVER}:80`,
-          `turn:${EXPRESSTURN_SERVER}:80?transport=tcp`,
-          `turns:${EXPRESSTURN_SERVER}:443?transport=tcp`,
-        ],
-        username: EXPRESSTURN_USER,
-        credential: EXPRESSTURN_PASS,
-      },
-    ],
-  };
+  const iceServers = [
+    // Always include free STUN
+    { urls: ["stun:stun.l.google.com:19302"] },
+  ];
+  // Only include TURN if credentials are configured
+  if (EXPRESSTURN_SERVER && EXPRESSTURN_USER && EXPRESSTURN_PASS) {
+    iceServers.push({
+      urls: [
+        `turn:${EXPRESSTURN_SERVER}:3478`,
+        `turn:${EXPRESSTURN_SERVER}:3478?transport=tcp`,
+        `turn:${EXPRESSTURN_SERVER}:80`,
+        `turn:${EXPRESSTURN_SERVER}:80?transport=tcp`,
+        `turns:${EXPRESSTURN_SERVER}:443?transport=tcp`,
+      ],
+      username: EXPRESSTURN_USER,
+      credential: EXPRESSTURN_PASS,
+    });
+  }
+  return { iceServers };
 }
 
 // HTTP server for serving the web viewer

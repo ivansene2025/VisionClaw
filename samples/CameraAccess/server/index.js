@@ -46,13 +46,23 @@ function getTurnCredentials() {
 
 // HTTP server for serving the web viewer
 const httpServer = http.createServer((req, res) => {
-  // TURN credentials API endpoint
+  // TURN credentials API endpoint — restricted to same-origin requests only
   if (req.url === "/api/turn") {
+    const origin = req.headers.origin || "";
+    const referer = req.headers.referer || "";
+    // Only allow requests from our own web viewer or the iOS app (no origin header)
+    const isSameOrigin = !origin || origin.includes("localhost") || origin.includes("127.0.0.1") || origin.includes("fly.dev");
+    if (origin && !isSameOrigin) {
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Forbidden" }));
+      return;
+    }
     const creds = getTurnCredentials();
-    res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    });
+    const headers = { "Content-Type": "application/json" };
+    if (isSameOrigin && origin) {
+      headers["Access-Control-Allow-Origin"] = origin;
+    }
+    res.writeHead(200, headers);
     res.end(JSON.stringify(creds));
     return;
   }

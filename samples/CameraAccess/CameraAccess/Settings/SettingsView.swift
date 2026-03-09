@@ -225,6 +225,9 @@ struct SettingsView: View {
     settings.translationTargetLanguage = translationTargetLanguage
     settings.translationOutputMode = translationOutputMode
     settings.golfCourseAPIKey = golfCourseAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    if let carry = Int(golfSevenIronCarry.trimmingCharacters(in: .whitespacesAndNewlines)), carry > 0 {
+      settings.golfSevenIronCarry = carry
+    }
     settings.discordVisionClawWebhook = discordVisionClawWebhook.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

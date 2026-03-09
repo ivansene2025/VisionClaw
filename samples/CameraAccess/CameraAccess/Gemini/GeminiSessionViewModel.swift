@@ -71,6 +71,9 @@ class GeminiSessionViewModel: ObservableObject {
   private var sessionLog: [(timestamp: Date, role: String, text: String)] = []
   private var sessionStartTime: Date?
 
+  /// Expose location manager for mini map view
+  var locationManagerAccess: LocationManager { locationManager }
+
   var streamingMode: StreamingMode = .glasses
 
   /// Closure that returns the current video frame from the stream.

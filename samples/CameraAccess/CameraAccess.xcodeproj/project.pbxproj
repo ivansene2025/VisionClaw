@@ -450,6 +450,7 @@
 				A1B2C3D42F0A000200000005 /* GeminiOverlayView.swift in Sources */,
 				A1B2C3D42F0A000200000006 /* LocationManager.swift in Sources */,
 				A1B2C3D42F0A000200000009 /* GolfCourseAPIService.swift in Sources */,
+				A1B2C3D42F0A00020000000A /* ClubDistanceModel.swift in Sources */,
 				A1B2C3D42F0A000200000007 /* GolfOverlayView.swift in Sources */,
 				A1B2C3D42F0A000200000008 /* TranslationOverlayView.swift in Sources */,
 			);
